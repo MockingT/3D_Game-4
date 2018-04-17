@@ -11,6 +11,9 @@
 ### 游戏类图：  
 ![avatar](https://github.com/MockingT/3D_Game-4/blob/master/picture/3d1.png)  
 ### 文件框架：  
-![avatar](https://github.com/MockingT/3D_Game-4/blob/master/picture/3d2.png)  
+![avatar](https://github.com/MockingT/3D_Game-4/blob/master/picture/3d2.png)  
 其中仅做了飞盘这一个预设，其余的SoreRecorder.cs（实现分数记录）, RoundController.cs（控制游戏的开始结束以及进入下一个Round）, DiskFactory.cs（如课件中要求，添加一个disk工厂，管理每一round中disk的出现落地被点击等动作）, DiskData.cs（Disk的基本属性和设置，包括大小出发位置颜色，速度等）
-均添加到主摄像机上即可。
+均添加到主摄像机上即可。  
+### Camera设置以及游戏规则：  
+![avatar](https://github.com/MockingT/3D_Game-4/blob/master/picture/3d5.png)  
+RoundController文件添加到主摄像机之后，用户可以选择每一轮出现的飞碟数量，如图我输入的飞碟数为10，并且每一Round飞碟数不变，当用户成功点击飞碟时，在第一轮会得到10分，第二轮每击中一个得20分，第三轮则是30分，以此类推。
