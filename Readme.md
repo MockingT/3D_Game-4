@@ -16,4 +16,8 @@
 均添加到主摄像机上即可。  
 ### Camera设置以及游戏规则：  
 ![avatar](https://github.com/MockingT/3D_Game-4/blob/master/picture/3d5.png)  
-RoundController文件添加到主摄像机之后，用户可以选择每一轮出现的飞碟数量，如图我输入的飞碟数为10，并且每一Round飞碟数不变，当用户成功点击飞碟时，在第一轮会得到10分，第二轮每击中一个得20分，第三轮则是30分，以此类推。
+RoundController文件添加到主摄像机之后，用户可以选择每一轮出现的飞碟数量，如图我输入的飞碟数为10，并且每一Round飞碟数不变，当用户成功点击飞碟时，在第一轮会得到10分，第二轮每击中一个得20分，第三轮则是30分，以此类推。  
+### 效果展示：  
+![avatar](https://github.com/MockingT/3D_Game-4/blob/master/picture/3d3.png)  
+![avatar](https://github.com/MockingT/3D_Game-4/blob/master/picture/3d4.png)  
+
