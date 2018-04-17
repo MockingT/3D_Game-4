@@ -21,3 +21,260 @@ RoundController文件添加到主摄像机之后，用户可以选择每一轮�
 ![avatar](https://github.com/MockingT/3D_Game-4/blob/master/picture/3d3.png)  
 ![avatar](https://github.com/MockingT/3D_Game-4/blob/master/picture/3d4.png)  
 
+### 代码部分：  
+- DiskData.cs  
+
+      using System.Collections;
+      using System.Collections.Generic;
+      using UnityEngine;
+
+      public class DiskData : MonoBehaviour, OnReachEndCallback
+      {
+          private float time;
+          public float g = -9.8f; // gravity speed
+          private Vector3 pointA; // start from point a
+          private Vector3 pointB; // end at point b
+          private Vector3 _speed; // moving speed
+          private Vector3 Gravity; 
+          private Vector3 currentAngle; // the angle
+          private float dTime = 0;
+          private float shotSpeed; // launching speed
+          public int indexInUsed { get; set; }
+          public int shotScore { get; set; }
+          public int innerDiskCount { get; set; }
+          private int timeCount;
+          private int currentTimeCount;
+          public bool isEnabled { get; set; } // whether it can move
+          public bool reachedEnd // whether reached
+          {
+              get
+              {
+                  if (currentTimeCount >= timeCount)
+                      return true;
+                  return false;
+              }
+          }
+
+          // set the random start and end point
+          public static Vector3 getRandomStartPoint()
+          {
+              Vector3 random = new Vector3(Random.Range(-1.5f, 1.5f), 1.5f, -12f);
+              return random;
+          }
+          public static Vector3 getRandomEndPoint()
+          {
+              Vector3 random = new Vector3(Random.Range(-5f, 5f), Random.Range(3f, 8f), 5f);
+              return random;
+          }
+          // set random color
+          public static Color getRandomColor()
+          {
+              float r = Random.Range(0f, 1f);
+              float g = Random.Range(0f, 1f);
+              float b = Random.Range(0f, 1f);
+              Color tcolor = new Color(r, g, b);
+              return tcolor;
+          }
+
+          public void ReachEndCallback(DiskData disk)
+          {
+              Singleton<DiskFactory>.Instance.FreeDisk(disk);
+          }
+
+          // set the shape and the color
+          public void setShapeColor(int ruler)
+          {
+              Renderer render = this.transform.GetComponent<Renderer>();
+              render.material.shader = Shader.Find("Transparent/Diffuse");
+              render.material.color = getRandomColor();
+              this.transform.localScale = new Vector3(2 - 0.1f * ruler, 2 - 0.1f * ruler, 2 - 0.1f * ruler);
+          }
+
+          // Initialize: set the start location and the shape, color
+          public void setStart(int a)
+          {
+              setShapeColor(a);
+              timeCount = (int)(2f / Time.deltaTime);
+              currentTimeCount = 0;
+              this.isEnabled = true;
+              this.shotScore = 10 * a; // in round1, 10points per hit, round2, 20points per hit...
+              shotSpeed = 20f + 10f * a;
+              pointA = getRandomStartPoint();
+              pointB = getRandomEndPoint();
+              time = Vector3.Distance(pointA, pointB) / shotSpeed;
+              transform.position = pointA;
+              _speed = new Vector3((pointB.x - pointA.x) / time,
+                  (pointB.y - pointA.y) / time - 0.5f * g * time, (pointB.z - pointA.z) / time);
+              Gravity = Vector3.zero;
+          }
+
+          public void reset()
+          {
+              isEnabled = false;
+              this.transform.position = pointA;
+              _speed = Vector3.zero;
+              Gravity = Vector3.zero;
+              currentAngle = Vector3.zero;
+              this.transform.eulerAngles = currentAngle;
+              currentTimeCount = 0;
+              dTime = 0;
+          }
+
+          void FixedUpdate()
+          {
+              if (isEnabled && this.transform.position != pointB) // keep moving
+              {
+                  currentTimeCount++;
+                  Gravity.y = g * (dTime += Time.fixedDeltaTime);
+                  transform.position += (_speed + Gravity) * Time.fixedDeltaTime;
+                  currentAngle.x = -Mathf.Atan((_speed.y + Gravity.y) / _speed.z) * Mathf.Rad2Deg;
+                  transform.eulerAngles = currentAngle;
+              }
+              if (this.reachedEnd) // if it has reached the end and not get clicked
+              {
+                  reset();
+                  ReachEndCallback(this);
+              }
+          }
+      }
+
+      public interface OnReachEndCallback
+      {
+          void ReachEndCallback(DiskData disk);
+      }  
+      
+- DiskFactory.cs  
+
+      using System.Collections;
+      using System.Collections.Generic;
+      using UnityEngine;
+
+      public class DiskFactory : MonoBehaviour
+      { 
+          public GameObject disk;
+          private List<DiskData> used;
+          private List<DiskData> free;
+          private int count;
+          public Camera cam;
+
+          // Initialization
+          void Awake()
+          {
+              used = new List<DiskData>();
+              free = new List<DiskData>();
+              count = 0;
+          }
+
+          // get the count of the used disks
+          public int usedCount()
+          {
+              return used.Count; 
+          }
+
+          // if click the disk
+          void FixedUpdate()
+          {
+              if (Input.GetButtonDown("Fire1"))
+              {
+                  Vector3 mouse = Input.mousePosition;
+                  Camera ca = cam.GetComponent<Camera>();
+                  Ray ray = ca.ScreenPointToRay(mouse);
+                  RaycastHit hit;
+                  if (Physics.Raycast(ray, out hit))
+                  {
+                      if (hit.collider.gameObject.tag.Contains("Disk")) // if hit the disk
+                      { 
+                          DiskData theDisk = hit.collider.gameObject.GetComponent<DiskData>();
+                          theDisk.reset();
+                          FreeDisk(theDisk);
+                          ScoreRecorder a = Singleton<ScoreRecorder>.Instance;
+                          a.Record(theDisk); // get score
+                      }
+                  }
+              }
+          }
+
+          // get a new disk and launch it
+          public int getDisk(int ruler)
+          {
+              DiskData theDisk;
+              if (free.Count > 0) // if there is free disk
+              {
+                  int free_index = free.Count - 1; // get the free disk's index
+                  theDisk = free.ToArray()[free_index];
+                  free.RemoveAt(free_index);
+                  theDisk.setStart(ruler);
+                  used.Add(theDisk);
+              }
+              else // create a new disk
+              {
+                  count++;
+                  GameObject newDisk = Instantiate(disk) as GameObject;
+                  newDisk.name = "Disk" + count.ToString();
+                  theDisk = newDisk.GetComponent<DiskData>();
+                  theDisk.innerDiskCount = count;
+                  theDisk.setStart(ruler);
+                  used.Add(theDisk);
+              }
+              return theDisk.indexInUsed = used.Count - 1;
+          }
+
+          //3 ways of freedisk
+          public void FreeDisk(int index)
+          {
+              DiskData theDisk = used.ToArray()[index];
+              if(theDisk != null)
+              {
+                  used.Remove(theDisk);
+                  free.Add(theDisk);
+              }
+          }
+          public void FreeDisk(DiskData _disk)
+          {
+
+              DiskData theDisk = null;
+              foreach (DiskData _Disk in used)
+              {
+                  if (_Disk.innerDiskCount == _disk.innerDiskCount)
+                  {
+                      theDisk = _Disk;
+                  }
+              }
+              if(theDisk != null)
+              {
+                  theDisk.reset();
+                  free.Add(theDisk);
+                  used.Remove(theDisk);
+              }
+          }
+          public void FreeAllDisks() // free the used disks
+          {
+              int i = 0;
+              for (i = used.Count - 1; i >= 0; i--)
+              {
+                  DiskData disk = used[i];
+                  used.Remove(disk);
+                  free.Add(disk);
+              }
+          }
+      }
+
+      public class Singleton<T> : MonoBehaviour where T : MonoBehaviour
+      {
+          protected static T instance;
+          public static T Instance
+          {
+              get
+              {
+                  if (instance == null)
+                  {
+                      instance = (T)FindObjectOfType(typeof(T));
+                      if (instance == null)
+                      {
+                          Debug.LogError("An instance of " + typeof(T) + " is needed in the scene, but there is none.");
+                      }
+                  }
+                  return instance;
+              }
+          }
+      }
