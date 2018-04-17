@@ -1,5 +1,6 @@
 # 3D_Game-4  
-## 简单的鼠标打飞碟（Hit UFO）游戏（视频见：http://v.youku.com/v_show/id_XMzU0NTcxODE2OA==.html?spm=a2hzp.8244740.0.0）  
+## 简单的鼠标打飞碟（Hit UFO）游戏  
+（视频见：http://v.youku.com/v_show/id_XMzU0NTcxODE2OA==.html?spm=a2hzp.8244740.0.0）  
 ### 游戏内容要求：  
 - 游戏有 n 个 round，每个 round 都包括10 次 trial；  
 - 每个 trial 的飞碟的色彩、大小、发射位置、速度、角度、同时出现的个数都可能不同。它们由该 round 的 ruler 控制；  
